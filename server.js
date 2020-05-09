@@ -11,15 +11,15 @@ app.get('/', function(req, res){
   res.sendFile(__dirname + '/src/index.html');
 });
 
-
 app.get('/ping', function(req, res) {
   res.send('pong');
 });
 
 app.post('/upload', function(req, res) {
-  
-  let sampleFile;
-  let uploadPath;
+
+  let file;
+  const uploadPathArray = [];
+
   console.log(req.files )
 
   if (!req.files || Object.keys(req.files).length === 0) {
@@ -29,17 +29,18 @@ app.post('/upload', function(req, res) {
 
   console.log('req.files >>>', req.files); // eslint-disable-line
 
-  sampleFile = req.files.sampleFile;
-
-  uploadPath = __dirname + '/uploads/' + sampleFile.name;
-
-  sampleFile.mv(uploadPath, function(err) {
-    if (err) {
-      return res.status(500).send(err);
-    }
-
-    res.send('File uploaded to ' + uploadPath);
-  });
+  file = req.files.file;
+  req.files.file.forEach(function(f) {
+    const uploadPath = __dirname + '/uploads/' + f.name;
+    uploadPathArray.push(uploadPath + '\n')
+    f.mv(uploadPath, function(err) {
+      if (err) {
+        return res.status(500).send(err);
+      }
+    });
+  })
+ 
+  res.send('File uploaded to ' + uploadPathArray.join(''));
 });
 
 app.listen(PORT, function(req, res) {

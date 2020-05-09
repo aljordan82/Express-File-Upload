@@ -1,12 +1,246 @@
-<html>
-  <body>
-    <form ref='uploadForm' 
-      id='uploadForm' 
-      action='http://localhost:8080/upload' 
-      method='post' 
-      encType="multipart/form-data">
-        <input type="file" name="sampleFile" multiple />
-        <input type='submit' value='Upload!' />
-    </form>     
+ 
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>Ajax upload form</title>
+      </head>
+      <style>
+            p {
+                margin: 4px;
+                padding: 4px;
+            }
+
+            form {
+                margin: 4px;
+                padding: 4px;
+                border: 1px solid #e7e7e7;
+            }
+
+            #progress-container {
+              height: 23px;
+              border: 1px solid #e7e7e7;
+              width: 200px;
+            }
+            #progress {
+              height: 100%;
+              background: green;
+              display: inline-block;
+            }
+      </style>
+      <body>
+        <h1>Files Upload</h1>
+
+        <!-- The form starts -->
+        <form
+          action="http://localhost:8080/upload"
+          method="post"
+          enctype="multipart/form-data"
+          id="form-id"
+        >
+          <!-- The file to upload -->
+          <p>
+            <input id="file-id" type="file" name="file[]" multiple/>
+
+            <!--
+    Also by default, we disable the upload button.
+    If Ajax uploads are supported we'll enable it.
+  -->
+            <input
+              type="button"
+              value="Upload"
+              id="upload-button-id"
+              disabled="disabled"
+            />
+          </p>
+
+
+          <!--hidden submit button -->
+          <!-- <p><input type="submit" value="Submit" /></p> -->
+
+
+
+          <!-- Placeholders for messages set by event handlers -->
+          <p id="upload-status"></p>
+          <div id="progress-container">
+            <div id="progress" ></div>
+          </div>
+          <pre id="result"></pre>
+        </form>
+        <script>
+            
+            // Function that will allow us to know if Ajax uploads are supported
+            function supportAjaxUploadWithProgress() {
+              return (
+                supportFileAPI() &&
+                supportAjaxUploadProgressEvents() &&
+                supportFormData()
+              );
+    
+              // Is the File API supported?
+              function supportFileAPI() {
+                var fi = document.createElement("INPUT");
+                fi.type = "file";
+                return "files" in fi;
+              }
+    
+              // Are progress events supported?
+              function supportAjaxUploadProgressEvents() {
+                var xhr = new XMLHttpRequest();
+                return !!(xhr && "upload" in xhr && "onprogress" in xhr.upload);
+              }
+    
+              // Is FormData supported?
+              function supportFormData() {
+                return !!window.FormData;
+              }
+            }
+    
+            // Actually confirm support
+            if (supportAjaxUploadWithProgress()) {
+              // Ajax uploads are supported!
+              // Change the support message and enable the upload button
+              var uploadBtn = document.getElementById("upload-button-id");
+              uploadBtn.removeAttribute("disabled");
+    
+              // Init the Ajax form submission
+              initFullFormAjaxUpload();
+    
+              // Init the single-field file upload
+              initFileOnlyAjaxUpload();
+            }
+    
+            function initFullFormAjaxUpload() {
+              var form = document.getElementById("form-id");
+              form.onsubmit = function() {
+                // FormData receives the whole form
+                var formData = new FormData(form);
+    
+                // We send the data where the form wanted
+                var action = form.getAttribute("action");
+    
+                // Code common to both variants
+                sendXHRequest(formData, action);
+    
+                // Avoid normal form submission
+                return false;
+              };
+            }
+    
+            function initFileOnlyAjaxUpload() {
+              var uploadBtn = document.getElementById("upload-button-id");
+              uploadBtn.onclick = function(evt) {
+                var formData = new FormData();
+    
+                // Since this is the file only, we send it to a specific location
+                var action = "http://localhost:8080/upload";
+    
+                // FormData only has the file
+                var fileInput = document.getElementById("file-id");
+                debugger
+                // var file = fileInput.files[0];
+ 
+                Array.prototype.forEach.call( fileInput.files, function(file,i){
+                    formData.append("file", file);
+                 })
+                // Code common to both variants
+                sendXHRequest(formData, action);
+              };
+            }
+    
+            // Once the FormData instance is ready and we know
+            // where to send the data, the code is the same
+            // for both variants of this technique
+            function sendXHRequest(formData, uri) {
+              // Get an XMLHttpRequest instance
+              var xhr = new XMLHttpRequest();
+    
+              // Set up events
+              xhr.upload.addEventListener(
+                "loadstart",
+                onloadstartHandler,
+                false
+              );
+              xhr.upload.addEventListener("progress", onprogressHandler, false);
+              xhr.upload.addEventListener("load", onloadHandler, false);
+              xhr.addEventListener(
+                "readystatechange",
+                onreadystatechangeHandler,
+                false
+              );
+              xhr.addEventListener('error', onErrorHandler)
+              // Set up request
+              xhr.open("POST", uri, true);
+    
+              // Fire!
+              xhr.send(formData);
+            }
+    
+            // Handle the start of the transmission
+            function onloadstartHandler(evt) {
+              var div = document.getElementById("upload-status");
+              div.innerHTML = "Upload started.";
+            }
+    
+            // Handle the end of the transmission
+            function onloadHandler(evt) {
+              var div = document.getElementById("upload-status");
+              div.innerHTML += "<" + "br>File uploaded. Waiting for response.";
+            }
+    
+            // Handle the progress
+            function onprogressHandler(evt) {
+              var div = document.getElementById("progress");
+              var percent = (evt.loaded / evt.total) * 100;
+              div.style.width = percent + "%";
+            }
+
+            // Handle the progress
+            function onErrorHandler(evt)  {
+              var div = document.getElementById("upload-status");
+              div.innerHTML = "Failed to upload  " 
+              var $progress = document.getElementById("progress");
+              $progress.style.width =  "0";
+            }
+    
+            // Handle the response from the server
+            function onreadystatechangeHandler(evt) {
+              var status, text, readyState;
+    
+              try {
+                readyState = evt.target.readyState;
+                text = evt.target.responseText;
+                status = evt.target.status;
+              } catch (e) {
+                return;
+              }
+              if (
+                readyState == 4 &&
+                status == "200" &&
+                evt.target.responseText
+              ) {
+                var status = document.getElementById("upload-status");
+                status.innerHTML += "<" + "br>Success!";
+    
+                var result = document.getElementById("result");
+                result.innerHTML =
+                  "<p>The server saw it as:</p><pre>" +
+                  evt.target.responseText +
+                  "</pre>";
+              }
+
+              if( status >= 400  ) {
+                var result = document.getElementById("result");
+                result.innerHTML =
+                  "<p>Failed to upload file  </p><pre>" +
+                  evt.target.responseText +
+                  "</pre>";
+
+                  var $progress = document.getElementById("progress");
+                  $progress.style.width =  "0";
+              }
+
+            }
+          </script>
   </body>
 </html>
