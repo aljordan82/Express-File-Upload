@@ -5,8 +5,6 @@ app.use(fileupload());
 const PORT = 8080;
 // app.use('/form', express.static(__dirname + '/index.html'));
 
-// default options
-//  app.use(fileUpload());
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/src/index.html');
 });
@@ -30,15 +28,26 @@ app.post('/upload', function(req, res) {
   console.log('req.files >>>', req.files); // eslint-disable-line
 
   file = req.files.file;
-  req.files.file.forEach(function(f) {
-    const uploadPath = __dirname + '/uploads/' + f.name;
-    uploadPathArray.push(uploadPath + '\n')
-    f.mv(uploadPath, function(err) {
-      if (err) {
-        return res.status(500).send(err);
-      }
-    });
-  })
+  if(Array.isArray(file) ) {
+    req.files.file.forEach(function(f) {
+      const uploadPath = __dirname + '/uploads/' + f.name;
+      uploadPathArray.push(uploadPath + '\n')
+      f.mv(uploadPath, function(err) {
+        if (err) {
+          return res.status(500).send(err);
+        }
+      });
+    })
+  } else {
+    const uploadPath = __dirname + '/uploads/' + file.name;
+      uploadPathArray.push(uploadPath + '\n')
+      file.mv(uploadPath, function(err) {
+        if (err) {
+          return res.status(500).send(err);
+        }
+      });
+
+  }
  
   res.send('File uploaded to ' + uploadPathArray.join(''));
 });

@@ -58,7 +58,7 @@
           <!--hidden submit button -->
           <!-- <p><input type="submit" value="Submit" /></p> -->
 
-
+          
 
           <!-- Placeholders for messages set by event handlers -->
           <p id="upload-status"></p>
@@ -104,7 +104,7 @@
               uploadBtn.removeAttribute("disabled");
     
               // Init the Ajax form submission
-              initFullFormAjaxUpload();
+              // initFullFormAjaxUpload();
     
               // Init the single-field file upload
               initFileOnlyAjaxUpload();
@@ -137,7 +137,6 @@
     
                 // FormData only has the file
                 var fileInput = document.getElementById("file-id");
-                debugger
                 // var file = fileInput.files[0];
  
                 Array.prototype.forEach.call( fileInput.files, function(file,i){
@@ -190,17 +189,17 @@
     
             // Handle the progress
             function onprogressHandler(evt) {
-              var div = document.getElementById("progress");
               var percent = (evt.loaded / evt.total) * 100;
-              div.style.width = percent + "%";
+              setProgress(percent)
             }
+
+     
 
             // Handle the progress
             function onErrorHandler(evt)  {
               var div = document.getElementById("upload-status");
               div.innerHTML = "Failed to upload  " 
-              var $progress = document.getElementById("progress");
-              $progress.style.width =  "0";
+              setProgress(0)
             }
     
             // Handle the response from the server
@@ -236,11 +235,19 @@
                   evt.target.responseText +
                   "</pre>";
 
-                  var $progress = document.getElementById("progress");
-                  $progress.style.width =  "0";
+                  setProgress(0)
               }
 
             }
+          
+
+            function setProgress(percent) {
+              var div = document.getElementById("progress");
+              div.style.width = percent + "%";
+              div.innerText = Math.floor(percent) + '%';
+            }
+          
+          
           </script>
   </body>
 </html>
