@@ -22,9 +22,13 @@
               border: 1px solid #e7e7e7;
               width: 200px;
             }
-            #progress {
+            #progress-bar {
               height: 100%;
               background: green;
+              display: inline-block;
+            }
+            #progress-value {
+              height: 100%;
               display: inline-block;
             }
       </style>
@@ -62,8 +66,9 @@
 
           <!-- Placeholders for messages set by event handlers -->
           <p id="upload-status"></p>
+          <div id="progress-value" ></div>
           <div id="progress-container">
-            <div id="progress" ></div>
+            <div id="progress-bar" ></div>
           </div>
           <pre id="result"></pre>
         </form>
@@ -242,9 +247,11 @@
           
 
             function setProgress(percent) {
-              var div = document.getElementById("progress");
-              div.style.width = percent + "%";
-              div.innerText = Math.floor(percent) + '%';
+              var $progressBar = document.getElementById("progress-bar");
+              var $progressValue = document.getElementById("progress-value");
+              $progressBar.style.width = percent + "%";
+              $progressValue.innerText = percent ?  Math.floor(percent) + '%' : ''
+        
             }
           
           
